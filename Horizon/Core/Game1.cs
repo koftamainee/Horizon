@@ -1,8 +1,10 @@
-﻿using Horizon.States;
+﻿using System.Drawing;
+using Horizon.States;
 using Horizon.Input;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
+using Color = Microsoft.Xna.Framework.Color;
+
 
 namespace Horizon.Core;
 
@@ -18,7 +20,12 @@ public class Game1 : Game
     {
         _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
-        IsMouseVisible = true;
+        IsMouseVisible = false;
+        
+        _graphics.PreferredBackBufferWidth = 1920;
+        _graphics.PreferredBackBufferHeight = 1080;
+        
+        _graphics.ApplyChanges();
     }
 
     protected override void Initialize()
