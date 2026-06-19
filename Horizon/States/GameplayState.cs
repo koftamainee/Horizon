@@ -28,7 +28,7 @@ public sealed class GameplayState(Game1 game) : IGameState
     {
         _player.Update(gameTime);
         _physics.Step((float)gameTime.ElapsedGameTime.TotalSeconds);
-        _camera.Follow(_player.Position);
+        _camera.Follow(_player.Position, (float)gameTime.ElapsedGameTime.TotalSeconds);
     }
 
     public void Draw(SpriteBatch spriteBatch)

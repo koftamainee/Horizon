@@ -12,7 +12,7 @@ public class PlayerController
 
     private const float MoveSpeed = 300f;
     private const float Acceleration = 2000f;
-    private const float Deceleration = 2000f;
+    private const float Deceleration = 3000f;
     private const float AirAcceleration = 1200f;
     private const float AirDeceleration = 800f;
 
