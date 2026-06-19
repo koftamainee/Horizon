@@ -1,5 +1,6 @@
 ﻿using System;
 using Horizon.Input;
+using Horizon.Physics;
 using Microsoft.Xna.Framework;
 
 namespace Horizon.Components;

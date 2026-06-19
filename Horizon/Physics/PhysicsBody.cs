@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 
-namespace Horizon.Components;
+namespace Horizon.Physics;
 
 public class PhysicsBody
 {
@@ -9,25 +9,25 @@ public class PhysicsBody
     public Vector2 Velocity { get; set; }
     public bool IsGrounded { get; private set; }
 
-    private readonly Vector2 _size;
-    
+    public IShape Shape { get; }
+
     private const float Gravity = 1500f;
     private const float FallGravityMultiplier = 1.5f;
 
-    public PhysicsBody(Vector2 position, Vector2 size)
+    public PhysicsBody(Vector2 position, IShape shape)
     {
         Position = position;
-        _size = size;
+        Shape = shape;
     }
 
     public void Update(float dt, List<Rectangle> colliders)
     {
         var velocity = Velocity;
-        
+
         float gravityThisFrame = velocity.Y > 0
             ? Gravity * FallGravityMultiplier
             : Gravity;
-        
+
         velocity.Y += gravityThisFrame * dt;
         Velocity = velocity;
 
@@ -41,19 +41,21 @@ public class PhysicsBody
 
     private void ResolveHorizontalCollisions(List<Rectangle> colliders)
     {
+        var localBounds = Shape.Bounds;
         var bounds = GetBounds();
+
         foreach (var collider in colliders)
         {
             if (!bounds.Intersects(collider)) continue;
 
             if (Velocity.X < 0)
             {
-                Position = new Vector2(collider.Right, Position.Y);
+                Position = new Vector2(collider.Right - localBounds.X, Position.Y);
                 Velocity = new Vector2(0, Velocity.Y);
             }
             else if (Velocity.X > 0)
             {
-                Position = new Vector2(collider.Left - _size.X, Position.Y);
+                Position = new Vector2(collider.Left - localBounds.X - localBounds.Width, Position.Y);
                 Velocity = new Vector2(0, Velocity.Y);
             }
             bounds = GetBounds();
@@ -62,19 +64,21 @@ public class PhysicsBody
 
     private void ResolveVerticalCollisions(List<Rectangle> colliders)
     {
+        var localBounds = Shape.Bounds;
         var bounds = GetBounds();
+
         foreach (var collider in colliders)
         {
             if (!bounds.Intersects(collider)) continue;
 
             if (Velocity.Y < 0)
             {
-                Position = new Vector2(Position.X, collider.Bottom);
+                Position = new Vector2(Position.X, collider.Bottom - localBounds.Y);
                 Velocity = new Vector2(Velocity.X, 0);
             }
             else if (Velocity.Y > 0)
             {
-                Position = new Vector2(Position.X, collider.Top - _size.Y);
+                Position = new Vector2(Position.X, collider.Top - localBounds.Y - localBounds.Height);
                 Velocity = new Vector2(Velocity.X, 0);
                 IsGrounded = true;
             }
@@ -82,6 +86,13 @@ public class PhysicsBody
         }
     }
 
-    public Rectangle GetBounds() =>
-        new((int)Position.X, (int)Position.Y, (int)_size.X, (int)_size.Y);
+    public Rectangle GetBounds()
+    {
+        var localBounds = Shape.Bounds;
+        return new Rectangle(
+            (int)Position.X + localBounds.X,
+            (int)Position.Y + localBounds.Y,
+            localBounds.Width,
+            localBounds.Height);
+    }
 }

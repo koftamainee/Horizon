@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using Horizon.Components;
 using Horizon.Input;
-using Horizon.World;
+using Horizon.Physics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -15,16 +14,15 @@ public sealed class Player : Entity
     private readonly Texture2D _texture;
     private readonly Vector2 _size = new(32, 32);
 
-    private readonly Room _room;
-
     public Vector2 Position => _body.Position;
 
-    public Player(GraphicsDevice graphicsDevice, InputSystem input, Room room)
+    public Player(GraphicsDevice graphicsDevice, InputSystem input, PhysicsSystem physics)
     {
-        _room = room;
-        
-        _body = new PhysicsBody(new Vector2(200, 100), _size);
+        var shape = new BoxShape(_size / 2f, _size / 2f);
+        _body = new PhysicsBody(new Vector2(200, 100), shape);
         _controller = new PlayerController(_body, input);
+
+        physics.Register(_body);
 
         _texture = new Texture2D(graphicsDevice, (int)_size.X, (int)_size.Y);
         var pixels = new Color[(int)(_size.X * _size.Y)];
@@ -35,7 +33,6 @@ public sealed class Player : Entity
     public override void Update(GameTime gameTime)
     {
         _controller.Update(gameTime);
-        _body.Update((float)gameTime.ElapsedGameTime.TotalSeconds, _room.Colliders);
     }
 
     public override void Draw(SpriteBatch spriteBatch)
