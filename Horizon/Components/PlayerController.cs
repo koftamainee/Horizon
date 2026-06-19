@@ -58,6 +58,10 @@ public class PlayerController
             _isJumping = false;
             _jumpsRemaining = MaxJumps;
         }
+        else if (_coyoteTimer <= 0 && _jumpsRemaining >= MaxJumps)
+        {
+            _jumpsRemaining = MaxJumps - 1;
+        }
 
         if (_input.IsActionJustPressed(InputSystem.Actions.Jump))
             _jumpBufferTimer = JumpBufferTime;
