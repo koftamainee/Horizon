@@ -1,63 +1,57 @@
-﻿using System.Drawing;
-using Horizon.States;
-using Horizon.Input;
+﻿using Horizon.Input;
+using Horizon.Screens;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Color = Microsoft.Xna.Framework.Color;
-
+using MonoGame.Extended.Screens;
 
 namespace Horizon.Core;
 
 public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
-    private SpriteBatch _spriteBatch;
-    
-    public GameStateManager GameStateManager;
-    public InputSystem InputSystem;
+    public SpriteBatch SpriteBatch { get; private set; }
+    public InputSystem InputSystem { get; private set; }
+    public ScreenManager ScreenManager { get; private set; }
 
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
         IsMouseVisible = false;
-        
+
         _graphics.PreferredBackBufferWidth = 1920;
         _graphics.PreferredBackBufferHeight = 1080;
-        
+
         _graphics.ApplyChanges();
     }
 
     protected override void Initialize()
     {
-        GameStateManager = new GameStateManager();
         InputSystem = new InputSystem();
-        
-        GameStateManager.ChangeState(new GameplayState(this));
+        ScreenManager = new ScreenManager();
+        ScreenManager.ReplaceScreen(new GameplayScreen(this));
 
         base.Initialize();
     }
 
     protected override void LoadContent()
     {
-        _spriteBatch = new SpriteBatch(GraphicsDevice);
-
-        // TODO: use this.Content to load your game content here
+        SpriteBatch = new SpriteBatch(GraphicsDevice);
     }
 
     protected override void Update(GameTime gameTime)
     {
         InputSystem.Update(gameTime);
-        GameStateManager.Update(gameTime);
-        
+        ScreenManager.Update(gameTime);
+
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.Black);
-        
-        GameStateManager.Draw(_spriteBatch);
+
+        ScreenManager.Draw(gameTime);
 
         base.Draw(gameTime);
     }
