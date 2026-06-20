@@ -10,6 +10,13 @@
 
 #-------------------------------- References --------------------------------#
 
+/reference:C:\Users\kofta\.nuget\packages\monogame.extended.content.pipeline\6.0.0\tools\MonoGame.Extended.Content.Pipeline.dll
 
 #---------------------------------- Content ---------------------------------#
+
+#begin rooms/test_room/test_room.tmx
+/importer:TiledTilemapImporter
+/processor:TilemapProcessor
+/processorParam:LevelName=
+/build:rooms/test_room/test_room.tmx
 

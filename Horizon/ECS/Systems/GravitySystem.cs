@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Horizon.ECS.Components;
 using Microsoft.Xna.Framework;
-using MonoGame.Extended.ECS;
 using MonoGame.Extended.ECS.Systems;
 
 namespace Horizon.ECS.Systems;

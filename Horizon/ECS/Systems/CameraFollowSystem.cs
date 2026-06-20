@@ -14,6 +14,7 @@ public class CameraFollowSystem : UpdateSystem
     private readonly OrthographicCamera _camera;
     private readonly GraphicsDevice _graphicsDevice;
     private readonly List<int> _players = new();
+    private BoundingBox2D _bounds;
 
     private const float CameraSmoothness = 8f;
     private const float DeadZoneMargin = 0.4f;
@@ -22,6 +23,12 @@ public class CameraFollowSystem : UpdateSystem
     {
         _camera = camera;
         _graphicsDevice = graphicsDevice;
+        _bounds = BoundingBox2D.CreateFromPositionAndSize(Vector2.Zero, new Vector2(1600, 900));
+    }
+
+    public void SetBounds(BoundingBox2D bounds)
+    {
+        _bounds = bounds;
     }
 
     public override void Initialize(MonoGame.Extended.ECS.World world)
@@ -85,6 +92,20 @@ public class CameraFollowSystem : UpdateSystem
             desiredPos.Y = targetPos.Y - bottom;
 
         float t = MathHelper.Clamp(CameraSmoothness * dt, 0f, 1f);
-        _camera.Position = Vector2.Lerp(camPos, desiredPos, t);
+        var smoothPos = Vector2.Lerp(camPos, desiredPos, t);
+
+        var viewSize = new Vector2(_graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height);
+
+        if (_bounds.Width > viewSize.X)
+            smoothPos.X = MathHelper.Clamp(smoothPos.X,
+                _bounds.Min.X + viewSize.X / 2f,
+                _bounds.Max.X - viewSize.X / 2f);
+
+        if (_bounds.Height > viewSize.Y)
+            smoothPos.Y = MathHelper.Clamp(smoothPos.Y,
+                _bounds.Min.Y + viewSize.Y / 2f,
+                _bounds.Max.Y - viewSize.Y / 2f);
+
+        _camera.Position = smoothPos;
     }
 }

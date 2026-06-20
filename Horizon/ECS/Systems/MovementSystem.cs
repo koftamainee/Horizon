@@ -3,7 +3,6 @@ using Horizon.ECS.Components;
 using Microsoft.Xna.Framework;
 using MonoGame.Extended;
 using MonoGame.Extended.Collisions;
-using MonoGame.Extended.ECS;
 using MonoGame.Extended.ECS.Systems;
 
 namespace Horizon.ECS.Systems;
@@ -12,13 +11,15 @@ public class MovementSystem : UpdateSystem
 {
     private MonoGame.Extended.ECS.World _world;
     private readonly List<int> _entities = new();
-    private List<CollisionShape2D> _staticShapes = new();
+    private readonly CollisionWorld2D _collisionWorld;
+    private readonly Dictionary<int, CollisionShape2D> _staticShapes;
+    private readonly HashSet<int> _oneWayIds;
 
-    public void SetCollidersFromBoxes(List<BoundingBox2D> boxes)
+    public MovementSystem(CollisionWorld2D collisionWorld, Dictionary<int, CollisionShape2D> staticShapes, HashSet<int> oneWayIds)
     {
-        _staticShapes = new List<CollisionShape2D>(boxes.Count);
-        foreach (var box in boxes)
-            _staticShapes.Add(new CollisionShape2D(box));
+        _collisionWorld = collisionWorld;
+        _staticShapes = staticShapes;
+        _oneWayIds = oneWayIds;
     }
 
     public override void Initialize(MonoGame.Extended.ECS.World world)
@@ -53,68 +54,71 @@ public class MovementSystem : UpdateSystem
             var vel = entity.Get<Velocity>();
             var body = entity.Get<Body>();
             var grounded = entity.Get<Grounded>();
-
-            var size = body.HalfExtents * 2f;
-
-            pos.Value += new Vector2(vel.Value.X * dt, 0);
-            ResolveHorizontal(pos, vel, size);
+            var actor = entity.Get<CollisionActor>();
 
             grounded.Value = false;
-            float oldVelY = vel.Value.Y;
-            pos.Value += new Vector2(0, vel.Value.Y * dt);
-            ResolveVertical(pos, vel, size, grounded, oldVelY);
+            var size = body.HalfExtents * 2f;
 
-            if (entity.Has<CollisionActor>())
+            pos.Value += vel.Value * dt;
+
+            for (int iter = 0; iter < 4; iter++)
             {
-                var actor = entity.Get<CollisionActor>();
-                var box = BoundingBox2D.CreateFromPositionAndSize(pos.Value, size);
-                actor.Shape = new CollisionShape2D(box);
+                var shape = MakeShape(pos.Value, size);
+                actor.Shape = shape;
+
+                _collisionWorld.RebuildDynamicLayers();
+
+                var hit = false;
+                foreach (var pair in _collisionWorld.QueryCollisionPairs("dynamic", "static"))
+                {
+                    if (pair.FirstId != id) continue;
+
+                    var staticId = pair.SecondId;
+                    if (!_staticShapes.TryGetValue(staticId, out var staticShape))
+                        continue;
+
+                    if (!shape.TryGetCollision(staticShape, out var result))
+                        continue;
+
+                    var mtv = result.MinimumTranslationVector;
+                    if (mtv.LengthSquared() < 0.0001f)
+                        continue;
+
+                    if (_oneWayIds.Contains(staticId))
+                    {
+                        var oneWayNormal = mtv.LengthSquared() > 0 ? Vector2.Normalize(mtv) : Vector2.Zero;
+                        if (oneWayNormal.Y > -0.01f)
+                            continue;
+                    }
+
+                    pos.Value += mtv;
+                    shape = MakeShape(pos.Value, size);
+
+                    var mtvLen = mtv.Length();
+                    if (mtvLen > 0.0001f)
+                    {
+                        var normal = mtv / mtvLen;
+                        var vDotN = Vector2.Dot(vel.Value, normal);
+                        if (vDotN < 0)
+                            vel.Value -= vDotN * normal;
+                    }
+
+                    if (mtv.Y < 0 && vel.Value.Y <= 0)
+                        grounded.Value = true;
+
+                    hit = true;
+                    break;
+                }
+
+                if (!hit) break;
             }
+
+            actor.Shape = MakeShape(pos.Value, size);
         }
     }
 
     private static CollisionShape2D MakeShape(Vector2 pos, Vector2 size)
     {
         return new CollisionShape2D(BoundingBox2D.CreateFromPositionAndSize(pos, size));
-    }
-
-    private void ResolveHorizontal(Position pos, Velocity vel, Vector2 size)
-    {
-        var shape = MakeShape(pos.Value, size);
-
-        foreach (var staticShape in _staticShapes)
-        {
-            if (!shape.TryGetCollision(staticShape, out var result))
-                continue;
-
-            if (result.MinimumTranslationVector.X == 0)
-                continue;
-
-            pos.Value += new Vector2(result.MinimumTranslationVector.X, 0);
-            vel.Value = new Vector2(0, vel.Value.Y);
-            shape = MakeShape(pos.Value, size);
-        }
-    }
-
-    private void ResolveVertical(Position pos, Velocity vel, Vector2 size, Grounded grounded, float oldVelY)
-    {
-        var shape = MakeShape(pos.Value, size);
-
-        foreach (var staticShape in _staticShapes)
-        {
-            if (!shape.TryGetCollision(staticShape, out var result))
-                continue;
-
-            if (result.MinimumTranslationVector.Y == 0)
-                continue;
-
-            pos.Value += new Vector2(0, result.MinimumTranslationVector.Y);
-            vel.Value = new Vector2(vel.Value.X, 0);
-
-            if (result.MinimumTranslationVector.Y < 0 && oldVelY > 0)
-                grounded.Value = true;
-
-            shape = MakeShape(pos.Value, size);
-        }
     }
 }

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="1920" height="1080" tilewidth="1" tileheight="1" infinite="0" nextlayerid="4" nextobjectid="14">
+ <imagelayer id="2" name="Background">
+  <image source="sample_alt.png" width="1365" height="767"/>
+ </imagelayer>
+ <objectgroup id="3" name="Collision">
+  <object id="5" x="0.666667" y="612.667" width="819.333" height="42"/>
+  <object id="7" x="276" y="204.667" width="405.333" height="59.3333">
+   <properties>
+    <property name="one_way" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="8" x="818.667" y="206" width="134" height="58.6667">
+   <properties>
+    <property name="one_way" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="9" x="1092.67" y="204.333" width="273" height="41.6667">
+   <properties>
+    <property name="one_way" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="10" x="1092.67" y="613.333" width="135" height="36.3333">
+   <properties>
+    <property name="one_way" type="bool" value="true"/>
+   </properties>
+  </object>
+  <object id="11" x="1228.5" y="246.5" width="136.5" height="471"/>
+  <object id="13" name="spawn_player" type="player_spawn" x="1295.09" y="188.182"/>
+ </objectgroup>
+</map>
