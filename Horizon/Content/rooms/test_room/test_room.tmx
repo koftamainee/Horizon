@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="1920" height="1080" tilewidth="1" tileheight="1" infinite="0" nextlayerid="4" nextobjectid="14">
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="1365" height="767" tilewidth="1" tileheight="1" infinite="0" nextlayerid="8" nextobjectid="33">
  <imagelayer id="2" name="Background">
   <image source="sample_alt.png" width="1365" height="767"/>
  </imagelayer>
- <objectgroup id="3" name="Collision">
+ <objectgroup id="3" name="Collisions">
   <object id="5" x="0.666667" y="612.667" width="819.333" height="42"/>
   <object id="7" x="276" y="204.667" width="405.333" height="59.3333">
    <properties>
@@ -15,7 +15,7 @@
     <property name="one_way" type="bool" value="true"/>
    </properties>
   </object>
-  <object id="9" x="1092.67" y="204.333" width="273" height="41.6667">
+  <object id="9" x="1092.67" y="204.333" width="272.33" height="41.6667">
    <properties>
     <property name="one_way" type="bool" value="true"/>
    </properties>
@@ -25,7 +25,28 @@
     <property name="one_way" type="bool" value="true"/>
    </properties>
   </object>
-  <object id="11" x="1228.5" y="246.5" width="136.5" height="471"/>
-  <object id="13" name="spawn_player" type="player_spawn" x="1295.09" y="188.182"/>
+  <object id="17" x="1094.25" y="247.5">
+   <polygon points="0,0 20.25,46 60.75,81 102.5,94 133.75,94 133.5,367.25 269.75,367.5 269.75,-1.25"/>
+  </object>
+ </objectgroup>
+ <objectgroup id="4" name="Triggers">
+  <object id="15" name="to room 2" type="room_transition" x="1331.92" y="6.91667" width="26.3333" height="188.667">
+   <properties>
+    <property name="target_room" value="rooms/test_room2/test_room2"/>
+   </properties>
+  </object>
+ </objectgroup>
+ <objectgroup id="7" name="Hazards">
+  <object id="20" x="15" y="681" width="1342" height="77"/>
+ </objectgroup>
+ <objectgroup id="5" name="Spawns">
+  <object id="13" name="player_start" x="1258" y="140" width="48" height="48"/>
+  <object id="29" x="863" y="141" width="48" height="48"/>
+  <object id="30" x="456" y="142" width="48" height="48"/>
+  <object id="31" x="717" y="562" width="48" height="48"/>
+  <object id="32" x="1134" y="570" width="48" height="48"/>
+ </objectgroup>
+ <objectgroup id="6" name="Entities">
+  <object id="14" name="enemy1" type="enemy" x="404" y="562" width="50" height="50"/>
  </objectgroup>
 </map>

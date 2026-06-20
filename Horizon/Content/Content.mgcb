@@ -20,3 +20,9 @@
 /processorParam:LevelName=
 /build:rooms/test_room/test_room.tmx
 
+#begin rooms/test_room2/test_room2.tmx
+/importer:TiledTilemapImporter
+/processor:TilemapProcessor
+/processorParam:LevelName=
+/build:rooms/test_room2/test_room2.tmx
+

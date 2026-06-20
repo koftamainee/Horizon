@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="1365" height="767" tilewidth="1" tileheight="1" infinite="0" nextlayerid="7" nextobjectid="10">
+ <imagelayer id="2" name="Background">
+  <image source="sample_alt.png" width="1365" height="767"/>
+ </imagelayer>
+  <objectgroup id="3" name="Collisions">
+  <object id="1" x="0" y="550" width="1365" height="50"/>
+ </objectgroup>
+  <objectgroup id="4" name="Triggers">
+   <object id="5" type="room_transition" x="1280" y="500" width="50" height="50">
+    <properties>
+     <property name="target_room" value="rooms/test_room/test_room"/>
+    </properties>
+   </object>
+  </objectgroup>
+  <objectgroup id="5" name="Spawns">
+   <object id="6" name="player_start" x="376" y="476" width="48" height="48"/>
+   <object id="8" x="576" y="476" width="48" height="48"/>
+   <object id="9" x="776" y="476" width="48" height="48"/>
+  </objectgroup>
+ <objectgroup id="6" name="Entities">
+  <object id="7" name="enemy1" type="enemy" x="200" y="450" width="40" height="40"/>
+ </objectgroup>
+</map>

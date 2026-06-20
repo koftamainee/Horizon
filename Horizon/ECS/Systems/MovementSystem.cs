@@ -12,14 +12,12 @@ public class MovementSystem : UpdateSystem
     private MonoGame.Extended.ECS.World _world;
     private readonly List<int> _entities = new();
     private readonly CollisionWorld2D _collisionWorld;
-    private readonly Dictionary<int, CollisionShape2D> _staticShapes;
-    private readonly HashSet<int> _oneWayIds;
 
-    public MovementSystem(CollisionWorld2D collisionWorld, Dictionary<int, CollisionShape2D> staticShapes, HashSet<int> oneWayIds)
+    public bool HadHazardCollisionThisFrame { get; private set; }
+
+    public MovementSystem(CollisionWorld2D collisionWorld)
     {
         _collisionWorld = collisionWorld;
-        _staticShapes = staticShapes;
-        _oneWayIds = oneWayIds;
     }
 
     public override void Initialize(MonoGame.Extended.ECS.World world)
@@ -44,6 +42,7 @@ public class MovementSystem : UpdateSystem
     public override void Update(GameTime gameTime)
     {
         float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+        HadHazardCollisionThisFrame = false;
 
         foreach (int id in _entities)
         {
@@ -68,49 +67,79 @@ public class MovementSystem : UpdateSystem
 
                 _collisionWorld.RebuildDynamicLayers();
 
-                var hit = false;
-                foreach (var pair in _collisionWorld.QueryCollisionPairs("dynamic", "static"))
+                var hits = new List<CollisionHit>();
+
+                void GatherHits(string layer)
                 {
-                    if (pair.FirstId != id) continue;
-
-                    var staticId = pair.SecondId;
-                    if (!_staticShapes.TryGetValue(staticId, out var staticShape))
-                        continue;
-
-                    if (!shape.TryGetCollision(staticShape, out var result))
-                        continue;
-
-                    var mtv = result.MinimumTranslationVector;
-                    if (mtv.LengthSquared() < 0.0001f)
-                        continue;
-
-                    if (_oneWayIds.Contains(staticId))
+                    foreach (var pair in _collisionWorld.QueryCollisionPairs("dynamic", layer))
                     {
-                        var oneWayNormal = mtv.LengthSquared() > 0 ? Vector2.Normalize(mtv) : Vector2.Zero;
-                        if (oneWayNormal.Y > -0.01f)
+                        if (pair.FirstId != id) continue;
+
+                        ICollisionActor staticActor = pair.Second;
+                        var staticShape = staticActor.Shape;
+
+                        if (!shape.TryGetCollision(staticShape, out var result))
+                            continue;
+
+                        var mtv = result.MinimumTranslationVector;
+                        if (mtv.LengthSquared() < 0.0001f)
+                            continue;
+
+                        bool isOneWay = false;
+                        bool isHazard = false;
+                        if (staticActor is CollisionActor ca)
+                        {
+                            isOneWay = ca.IsOneWay;
+                            isHazard = ca.IsHazard;
+                        }
+
+                        hits.Add(new CollisionHit
+                        {
+                            MTV = mtv,
+                            StaticActor = staticActor,
+                            IsOneWay = isOneWay,
+                            IsHazard = isHazard,
+                        });
+                    }
+                }
+
+                GatherHits("static");
+                GatherHits("hazard");
+
+                if (hits.Count == 0) break;
+
+                hits.Sort((a, b) => b.MTV.LengthSquared().CompareTo(a.MTV.LengthSquared()));
+
+                bool anyResolved = false;
+                foreach (var hit in hits)
+                {
+                    var mtv = hit.MTV;
+                    var mtvLen = mtv.Length();
+                    var normal = mtvLen > 0.0001f ? mtv / mtvLen : Vector2.Zero;
+
+                    if (hit.IsOneWay)
+                    {
+                        if (normal.Y > -0.7f)
                             continue;
                     }
 
                     pos.Value += mtv;
                     shape = MakeShape(pos.Value, size);
 
-                    var mtvLen = mtv.Length();
-                    if (mtvLen > 0.0001f)
-                    {
-                        var normal = mtv / mtvLen;
-                        var vDotN = Vector2.Dot(vel.Value, normal);
-                        if (vDotN < 0)
-                            vel.Value -= vDotN * normal;
-                    }
+                    var vDotN = Vector2.Dot(vel.Value, normal);
+                    if (vDotN < 0)
+                        vel.Value -= vDotN * normal;
 
-                    if (mtv.Y < 0 && vel.Value.Y <= 0)
+                    if (normal.Y < -0.7f && vel.Value.Y <= 0)
                         grounded.Value = true;
 
-                    hit = true;
-                    break;
+                    if (hit.IsHazard)
+                        HadHazardCollisionThisFrame = true;
+
+                    anyResolved = true;
                 }
 
-                if (!hit) break;
+                if (!anyResolved) break;
             }
 
             actor.Shape = MakeShape(pos.Value, size);
@@ -120,5 +149,13 @@ public class MovementSystem : UpdateSystem
     private static CollisionShape2D MakeShape(Vector2 pos, Vector2 size)
     {
         return new CollisionShape2D(BoundingBox2D.CreateFromPositionAndSize(pos, size));
+    }
+
+    private struct CollisionHit
+    {
+        public Vector2 MTV;
+        public ICollisionActor StaticActor;
+        public bool IsOneWay;
+        public bool IsHazard;
     }
 }
